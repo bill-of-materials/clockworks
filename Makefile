@@ -9,7 +9,7 @@ DOCKER_IMAGE = docker.io/bill-of-materials/clockworks:latest
 build_command = docker buildx build
 
 docker: ## build the docker artifact
-	@docker $(build_command) -t $(DOCKER_IMAGE) .
+	$(build_command) -t $(DOCKER_IMAGE) .
 
 tg2: docker ## extract tg2 binary from docker artifact
 	@docker create -it --name tg2 "$(DOCKER_IMAGE)" sh
@@ -28,3 +28,4 @@ run: ## start tg2
 start: run ## start tg2
 
 all: tg2 ## build container and extract artifact
+build: tg2 ## build container and extract artifact

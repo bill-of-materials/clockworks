@@ -1,7 +1,7 @@
 FROM debian:stable-slim AS build
 
 ENV NTP_VERSION=ntp-4.2.8p18
-ENV NTP_ARCHIVE=http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-4.2/${NTP_VERSION}.tar.gz
+ENV NTP_ARCHIVE=https://downloads.nwtime.org/ntp/4.2.8/${NTP_VERSION}.tar.gz
 
 WORKDIR /tmp
 
