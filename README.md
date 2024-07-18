@@ -1,20 +1,22 @@
 # clockworks
 
+![Picture of clockworks in Bill Of Materials context](.res/clockworks.jpg)
+
 A few years ago a colleague did some dumpster diving and found a bunch of Gorgy
 Timing obsolete clocks using broadcast timecode signals to sync.
 
-Without a dedicated network, this clock is obsolete.
+Without a dedicated network, this clock can't be synced.
 
 Thanks to an obscure and forgotten NTP experimental binary able to generate WWV
-or IRIG signals, we can recreate the proper signalisation to sync the clock with
-the audio output port of a linux computer.
+or IRIG signals, we can recreate a proper signalisation audio signal to sync the
+clock using the audio output port of a computer running linux.
 
 ## Requirements
 
 Hardware:
 
-- A trashed clock using broadcast timecodes (can't help with that sorry)
-- A computer (laptop/embedded/Raspberry Pi...) running linux.
+- A trashed clock made for broadcast timecodes (can't help you find one)
+- A computer (laptop/embedded/Raspberry Pi...) with an open source distribution
 - An inline extension cord (preferably with a switch) to power the clock
 - An audio cable you will need to cut (TRS or TS, just two cables are needed)
 - 4x connecting dominos if you don't want to do (bad) soldering.
@@ -30,10 +32,14 @@ Software:
 
 Well, ...
 
+![Details of connecting dominos](.res/clockworks_detail1.jpg)
+![Details of connecting dominos](.res/clockworks_detail2.jpg)
+
 You just need to power the clock with a regular 230V cable (or your local
 specification).
 
-Same goes for the audio cable.
+Same goes for the audio cable, I used a broken Beyerdynamic DT-770 3.5mm TRS
+jack for this.
 
 ## Build (tg2)
 
@@ -43,8 +49,8 @@ $ make all
 
 ## Run
 
-If running pipewire you may need to enable snd_pcm_oss kernel module to expose
-the audio device in `/dev/audio`
+If you're using pipewire or a recent distribution you may need to enable
+snd_pcm_oss kernel module to expose the audio device in `/dev/audio`
 
 Make sure your default audio output is the right one!
 
@@ -90,7 +96,7 @@ This software licenced under the GPL, modifications performed 2006 & 2007 by Dea
 Contact: Dean Weiten, Norscan Instruments Ltd., Winnipeg, MB, Canada, ph (204)-233-9138, E-mail dmw@norscan.com
 ````
 
-## Integration
+## Raspberry Pi integration
 
 TODO
 
