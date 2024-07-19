@@ -23,8 +23,7 @@ Hardware:
 
 Software:
 
-- docker
-- docker-buildx (suggested)
+- docker and docker-buildx
 - make
 - `¯\_(ツ)_/¯`
 
@@ -94,14 +93,16 @@ Options: -a device_name                 Output audio device name (default /dev/a
 
 This software licenced under the GPL, modifications performed 2006 & 2007 by Dean Weiten
 Contact: Dean Weiten, Norscan Instruments Ltd., Winnipeg, MB, Canada, ph (204)-233-9138, E-mail dmw@norscan.com
-````
+```
 
 ## Raspberry Pi integration
 
-TODO
+WIP
 
 ## Thanks
 
 Ivan B.
+
 Thomas B.
+
 Dean Weiten
