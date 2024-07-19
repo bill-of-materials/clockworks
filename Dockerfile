@@ -17,12 +17,14 @@ RUN set -x \
   && ./configure --without-crypto \
   && make \
   && cd util \
-  && make tg2
+  && make tg2 \
+  && chmod +x tg2
 
 FROM debian:stable-slim
 
 WORKDIR /app
 
 COPY --from=build /tmp/ntp/util/tg2 /app/tg2
+
 
 ENTRYPOINT ["/app/tg2"]
