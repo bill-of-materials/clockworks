@@ -17,6 +17,9 @@ jobs:
       contents: read
       attestations: write
       id-token: write
+    strategy:
+      matrix:
+        architecture: [linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7]
 
     steps:
       - name: Check out code
@@ -45,6 +48,19 @@ jobs:
           images: |
             ${{ env.DOCKERHUB_REPOSITORY }}
             ghcr.io/${{ github.repository }}
+          tags: |
+            type=sha
+          labels: |
+            maintainer=uZer
+            org.opencontainers.image.title=${{ github.repository }}
+            org.opencontainers.image.description = "tg2 IRIG-B or WWV timecode generator"
+            org.opencontainers.image.vendor="${{ env.GITHUB_REPOSITORY_OWNER }}"
+            org.opencontainers.image.url = "https://github.com/${{ github.repository }}"
+            org.opencontainers.image.source = "https://github.com/${{ github.repository }}"
+            org.opencontainers.image.version = "0.0.1"
+            org.opencontainers.image.created = "${{ github.event.head_commit.timestamp }}"
+            org.opencontainers.image.revision = "${{ github.sha }}"
+            org.opencontainers.image.licenses = "MIT"
 
       - name: Build and push Docker image
         id: push
@@ -54,11 +70,11 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7
+          platforms: ${{ matrix.architecture }}
 
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v1
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
