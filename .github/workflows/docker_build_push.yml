@@ -1,5 +1,4 @@
 name: build_and_push
-
 on:
   push:
     branches:
@@ -11,85 +10,156 @@ concurrency:
 
 env:
   GHCR_IMAGE_NAME: ${{ github.repository }}
-  DOCKERHUB_IMAGE_NAME: ${{ vars.DOCKERHUB_IMAGE_NAME }}
 
 jobs:
   docker_build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       packages: write
       contents: read
-      attestations: write
       id-token: write
+
     strategy:
       matrix:
-        architecture: [linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7]
-
+        architecture:
+          - linux/amd64
+          - linux/arm64
+          - linux/arm/v6
+          - linux/arm/v7
     steps:
+      - name: Set vars
+        id: vars
+        run: |
+          echo "platform=$(echo -n ${{ matrix.architecture }} | sed 's/\//-/g')" >> $GITHUB_OUTPUT
+
       - name: Check out code
         uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@a64d0487d7069df33b279515d35d60fa80e2ea62
         with:
           images: |
-            docker.io/${{ env.DOCKERHUB_IMAGE_NAME }}
             ghcr.io/${{ env.GHCR_IMAGE_NAME }}
+          tags: |
+            # type=ref,event=branch
+            # type=ref,event=tag
+            # type=ref,event=pr
+            type=sha,prefix=,suffix=-${{ matrix.architecture }}
+          labels: |
+            org.opencontainers.image.authors=${{ github.repository_owner }}
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
+            org.opencontainers.image.description=tg2 IRIG-B or WWV timecode generator
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.title=${{ env.GHCR_IMAGE_NAME }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
+            org.opencontainers.image.version=0.0.1
+          annotations: |
+            org.opencontainers.image.authors=${{ github.repository_owner }}
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
+            org.opencontainers.image.description=tg2 IRIG-B or WWV timecode generator
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.title=${{ env.GHCR_IMAGE_NAME }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
+            org.opencontainers.image.version=0.0.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker images
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          platforms: ${{ matrix.architecture }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ steps.vars.outputs.platform }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ${{ steps.meta.outputs.tags }}
+
+
+  create_multi_platform_manifest_and_push:
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
+
+    needs:
+     - docker_build
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@a64d0487d7069df33b279515d35d60fa80e2ea62
+        with:
+          images: |
+            ghcr.io/${{ env.GHCR_IMAGE_NAME }}
+            docker.io/${{ vars.DOCKERHUB_IMAGE_NAME }}
           tags: |
             type=sha
           labels: |
+            org.opencontainers.image.authors=${{ github.repository_owner }}
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
+            org.opencontainers.image.description=tg2 IRIG-B or WWV timecode generator
+            org.opencontainers.image.documentation=https://github.com/${{ github.repository }}
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.title=${{ env.GHCR_IMAGE_NAME }}
-            org.opencontainers.image.description="tg2 IRIG-B or WWV timecode generator"
-            org.opencontainers.image.vendor="${{ github.repository_owner }}"
-            org.opencontainers.image.url="https://github.com/${{ github.repository }}"
-            org.opencontainers.image.source="https://github.com/${{ github.repository }}"
-            org.opencontainers.image.version="0.0.1"
-            org.opencontainers.image.created="${{ github.event.head_commit.timestamp }}"
-            org.opencontainers.image.revision="${{ github.sha }}"
-            org.opencontainers.image.licenses="MIT"
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
+            org.opencontainers.image.version=0.0.1
           annotations: |
+            org.opencontainers.image.authors=${{ github.repository_owner }}
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
+            org.opencontainers.image.description=tg2 IRIG-B or WWV timecode generator
+            org.opencontainers.image.documentation=https://github.com/${{ github.repository }}
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.title=${{ env.GHCR_IMAGE_NAME }}
-            org.opencontainers.image.description="tg2 IRIG-B or WWV timecode generator"
-            org.opencontainers.image.vendor="${{ github.repository_owner }}"
-            org.opencontainers.image.url="https://github.com/${{ github.repository }}"
-            org.opencontainers.image.source="https://github.com/${{ github.repository }}"
-            org.opencontainers.image.version="0.0.1"
-            org.opencontainers.image.created="${{ github.event.head_commit.timestamp }}"
-            org.opencontainers.image.revision="${{ github.sha }}"
-            org.opencontainers.image.licenses="MIT"
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
+            org.opencontainers.image.version=0.0.1
 
-      - name: Build Docker image
-        id: build
-        uses: docker/build-push-action@e050dfa622d93dfcc095192a984db567cb14f0f0
-        with:
-          context: .
-          push: false
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          platforms: ${{ matrix.architecture }}
-          outputs: type=registry
-
-  create_multi_platform_manifest_and_push:
-    runs-on: ubuntu-latest
-    needs: docker_build
-    steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -106,35 +176,36 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create and push multi-platform manifest
-        id: push
+      - name: Create manifest list and push
+        id: build
+        working-directory: /tmp/digests
         run: |
           docker buildx imagetools create \
-            --tag docker.io/${{ env.DOCKERHUB_IMAGE_NAME }}:${{ github.sha }} \
-            docker.io/${{ env.DOCKERHUB_IMAGE_NAME }}:${{ github.sha }}-linux/arm/v6 \
-            docker.io/${{ env.DOCKERHUB_IMAGE_NAME }}:${{ github.sha }}-linux/amd64 \
-            docker.io/${{ env.DOCKERHUB_IMAGE_NAME }}:${{ github.sha }}-linux/arm64 \
-            docker.io/${{ env.DOCKERHUB_IMAGE_NAME }}:${{ github.sha }}-linux/arm/v7
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(jq -cr '.annotations | map("--annotation " + gsub("manifest:"; "index:"))) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf 'ghcr.io/${{ env.GHCR_IMAGE_NAME }}@sha256:%s ' *)
 
-          docker buildx imagetools create \
-            --tag ghcr.io/${{ env.GHCR_IMAGE_NAME }}:${{ github.sha }} \
-            ghcr.io/${{ env.GHCR_IMAGE_NAME }}:${{ github.sha }}-linux/arm/v6 \
-            ghcr.io/${{ env.GHCR_IMAGE_NAME }}:${{ github.sha }}-linux/amd64 \
-            ghcr.io/${{ env.GHCR_IMAGE_NAME }}:${{ github.sha }}-linux/arm64 \
-            ghcr.io/${{ env.GHCR_IMAGE_NAME }}:${{ github.sha }}-linux/arm/v7
+          echo "" >> $GITHUB_OUTPUT
+
+      - name: Inspect image
+        id: digest
+        run: |
+          docker buildx imagetools inspect ghcr.io/${{ env.GHCR_IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          docker buildx imagetools inspect docker.io/${{ vars.DOCKERHUB_IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          echo "digest=$(docker buildx imagetools inspect ghcr.io/${{ env.GHCR_IMAGE_NAME }}:${{ steps.meta.outputs.version }} | head -n 3 | grep Digest | awk '{ print $2 }')" >> $GITHUB_OUTPUT
 
       - name: Generate artifact attestation (ghcr)
         id: push-ghcr
         uses: actions/attest-build-provenance@v1
         with:
           subject-name: ghcr.io/${{ env.GHCR_IMAGE_NAME }}
-          subject-digest: ${{ needs.docker_build_and_push.outputs.digest }}
+          subject-digest: ${{ steps.digest.outputs.digest }}
           push-to-registry: true
 
       - name: Generate artifact attestation (dockerhub)
         id: push-dockerhub
         uses: actions/attest-build-provenance@v1
         with:
-          subject-name: index.docker.io/${{ env.DOCKERHUB_IMAGE_NAME }}
-          subject-digest: ${{ needs.docker_build_and_push.outputs.digest }}
+          subject-name: index.docker.io/${{ vars.DOCKERHUB_IMAGE_NAME }}
+          subject-digest: ${{ steps.digest.outputs.digest }}
           push-to-registry: true
