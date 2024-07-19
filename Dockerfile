@@ -25,4 +25,4 @@ WORKDIR /app
 
 COPY --from=build /tmp/ntp/util/tg2 /app/tg2
 
-CMD ["/app/tg2"]
+ENTRYPOINT ["/app/tg2"]
