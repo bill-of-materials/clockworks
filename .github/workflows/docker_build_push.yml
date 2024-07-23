@@ -33,7 +33,7 @@ jobs:
           echo "platform=$(echo -n ${{ matrix.architecture }} | sed 's/\//-/g')" >> $GITHUB_OUTPUT
 
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -70,7 +70,7 @@ jobs:
             org.opencontainers.image.version=0.0.1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@aa33708b10e362ff993539393ff100fa93ed6a27 # v3
 
       - name: Log in to the Container registry
         uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446
@@ -81,7 +81,7 @@ jobs:
 
       - name: Build and push Docker images
         id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@5176d81f87c23d6fc96624dfdbcd9f3830bbe445 # v6
         with:
           push: true
           platforms: ${{ matrix.architecture }}
@@ -96,7 +96,7 @@ jobs:
           touch "/tmp/digests/${digest#sha256:}"
 
       - name: Upload digest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4
         with:
           name: digests-${{ steps.vars.outputs.platform }}
           path: /tmp/digests/*
@@ -120,7 +120,7 @@ jobs:
      - docker_build
     steps:
       - name: Download digests
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
         with:
           path: /tmp/digests
           pattern: digests-*
@@ -161,7 +161,7 @@ jobs:
             org.opencontainers.image.version=0.0.1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@aa33708b10e362ff993539393ff100fa93ed6a27 # v3
 
       - name: Log in to Docker Hub
         uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446
@@ -196,7 +196,7 @@ jobs:
 
       - name: Generate artifact attestation (ghcr)
         id: push-ghcr
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@5e9cb68e95676991667494a6a4e59b8a2f13e1d0 # v1
         with:
           subject-name: ghcr.io/${{ env.GHCR_IMAGE_NAME }}
           subject-digest: ${{ steps.digest.outputs.digest }}
@@ -204,7 +204,7 @@ jobs:
 
       - name: Generate artifact attestation (dockerhub)
         id: push-dockerhub
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@5e9cb68e95676991667494a6a4e59b8a2f13e1d0 # v1
         with:
           subject-name: index.docker.io/${{ vars.DOCKERHUB_IMAGE_NAME }}
           subject-digest: ${{ steps.digest.outputs.digest }}
