@@ -1,4 +1,4 @@
-FROM debian:stable-slim@sha256:57bd74e95092e6d4c0cdb6e36ca3db5bb828c2f592788734d1a707a4b92e7755 AS build
+FROM debian:stable-slim@sha256:382967fd7c35a0899ca3146b0b73d0791478fba2f71020c7aa8c27e3a4f26672 AS build
 
 ENV NTP_VERSION=ntp-4.2.8p18
 ENV NTP_ARCHIVE=https://downloads.nwtime.org/ntp/4.2.8/${NTP_VERSION}.tar.gz
@@ -20,7 +20,7 @@ RUN set -x \
   && make tg2 \
   && chmod +x tg2
 
-FROM debian:stable-slim@sha256:57bd74e95092e6d4c0cdb6e36ca3db5bb828c2f592788734d1a707a4b92e7755
+FROM debian:stable-slim@sha256:382967fd7c35a0899ca3146b0b73d0791478fba2f71020c7aa8c27e3a4f26672
 
 WORKDIR /app
 
