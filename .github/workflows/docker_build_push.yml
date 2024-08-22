@@ -196,7 +196,7 @@ jobs:
 
       - name: Generate artifact attestation (ghcr)
         id: push-ghcr
-        uses: actions/attest-build-provenance@5e9cb68e95676991667494a6a4e59b8a2f13e1d0 # v1
+        uses: actions/attest-build-provenance@6149ea5740be74af77f260b9db67e633f6b0a9a1 # v1
         with:
           subject-name: ghcr.io/${{ env.GHCR_IMAGE_NAME }}
           subject-digest: ${{ steps.digest.outputs.digest }}
@@ -204,7 +204,7 @@ jobs:
 
       - name: Generate artifact attestation (dockerhub)
         id: push-dockerhub
-        uses: actions/attest-build-provenance@5e9cb68e95676991667494a6a4e59b8a2f13e1d0 # v1
+        uses: actions/attest-build-provenance@6149ea5740be74af77f260b9db67e633f6b0a9a1 # v1
         with:
           subject-name: index.docker.io/${{ vars.DOCKERHUB_IMAGE_NAME }}
           subject-digest: ${{ steps.digest.outputs.digest }}
