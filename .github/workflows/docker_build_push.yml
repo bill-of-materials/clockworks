@@ -9,6 +9,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  # Will also push on dockerhub with DOCKERHUB_IMAGE_NAME
   GHCR_IMAGE_NAME: ${{ github.repository }}
 
 jobs:
@@ -88,25 +89,35 @@ jobs:
           annotations: ${{ steps.meta.outputs.annotations }}
           labels: ${{ steps.meta.outputs.labels }}
           tags: ${{ steps.meta.outputs.tags }}
+          outputs: type=registry,type=local,dest=/tmp/docker_content
 
-      - name: Export digest
+      - name: Export artifact and digest
         run: |
-          mkdir -p /tmp/digests
+          mkdir -p /tmp/artifacts /tmp/digest
           digest="${{ steps.build.outputs.digest }}"
-          touch "/tmp/digests/${digest#sha256:}"
+          touch "/tmp/digest/${digest#sha256:}"
+          find /tmp/docker_content/app
+          cp /tmp/docker_content/app/tg2* /tmp/artifacts/tg2-${{ env.DOCKER_METADATA_OUTPUT_VERSION }}
 
       - name: Upload digest
         uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4
         with:
           name: digests-${{ steps.vars.outputs.platform }}
-          path: /tmp/digests/*
+          path: /tmp/digest/*
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4
+        with:
+          name: tg2-${{ steps.vars.outputs.platform }}
+          path: /tmp/artifacts/*
           if-no-files-found: error
           retention-days: 1
 
       - name: Inspect image
         run: |
           docker buildx imagetools inspect ${{ steps.meta.outputs.tags }}
-
 
   create_multi_platform_manifest_and_push:
     runs-on: ubuntu-24.04
@@ -117,7 +128,7 @@ jobs:
       id-token: write
 
     needs:
-     - docker_build
+      - docker_build
     steps:
       - name: Download digests
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
@@ -209,3 +220,39 @@ jobs:
           subject-name: index.docker.io/${{ vars.DOCKERHUB_IMAGE_NAME }}
           subject-digest: ${{ steps.digest.outputs.digest }}
           push-to-registry: true
+
+  create_github_multiplatform_release:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+      contents: write
+      id-token: write
+    needs:
+      - docker_build
+      - create_multi_platform_manifest_and_push
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download artifacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
+        with:
+          path: /tmp/artifacts
+          pattern: tg2-*
+          merge-multiple: true
+
+      - name: Tag the repository
+        id: tag
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tag_prefix: release-
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: /tmp/artifacts/tg2*
+          fail_on_unmatched_files: true
+          make_latest: true
+          generate_release_notes: true
+          tag_name: ${{ steps.tag.outputs.new_tag }}
