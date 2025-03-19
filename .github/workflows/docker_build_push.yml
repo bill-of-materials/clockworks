@@ -100,7 +100,7 @@ jobs:
           cp /tmp/docker_content/app/tg2* /tmp/artifacts/tg2-${{ env.DOCKER_METADATA_OUTPUT_VERSION }}
 
       - name: Upload digest
-        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: digests-${{ steps.vars.outputs.platform }}
           path: /tmp/digest/*
@@ -108,7 +108,7 @@ jobs:
           retention-days: 1
 
       - name: Upload artifact
-        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: tg2-${{ steps.vars.outputs.platform }}
           path: /tmp/artifacts/*
