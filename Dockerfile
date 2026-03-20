@@ -9,11 +9,14 @@ RUN set -x \
   && apt update \
   && apt install -y build-essential wget
 
+COPY fixes /tmp/fixes
+
 RUN set -x \
   && wget "${NTP_ARCHIVE}" \
   && tar xvzf "${NTP_VERSION}.tar.gz" \
   && mv "${NTP_VERSION}" ntp \
   && cd ntp \
+  && patch -N -p1 -i "/tmp/fixes/bug_3926_pthread_detach.patch" \
   && ./configure --without-crypto \
   && make \
   && cd util \
