@@ -97,7 +97,65 @@ Contact: Dean Weiten, Norscan Instruments Ltd., Winnipeg, MB, Canada, ph (204)-2
 
 ## Raspberry Pi integration
 
-WIP
+ansible tasks:
+
+```yaml
+- name: Download tg2
+  ansible.builtin.get_url:
+    url: "{{ clockworks_tg2_url }}"
+    dest: /usr/bin/tg2
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Enable snd_pcm_oss module
+  community.general.modprobe:
+    name: snd_pcm_oss
+    persistent: present
+    state: present
+
+- name: Copy systemd unit file for tg2
+  ansible.builtin.template:
+    src: etc.systemd.system.tg2.service.j2
+    dest: /etc/systemd/system/clockworks-tg2.service
+    mode: '0644'
+    owner: root
+    group: root
+  notify:
+    - Daemon reload and restart tg2
+
+- name: Flush_handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure clockworks-tg2 service is enabled and started
+  ansible.builtin.systemd:
+    enabled: true
+    name: "clockworks-tg2.service"
+    state: started
+```
+
+systemd unit for tg2:
+
+```
+# {{ ansible_managed }}
+
+[Unit]
+Description=Run tg2 to send timecode on audio interface
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+User=root
+Group=root
+RestartSec=3
+TimeoutStopSec=5
+ExecStart=/usr/bin/tg2 -x -l+2
+SyslogIdentifier=tg2
+
+[Install]
+WantedBy=multi-user.target
+```
 
 ## Thanks
 
