@@ -4,5 +4,22 @@
     "config:best-practices",
     ":label(dependencies)",
     ":semanticCommitType(bump)"
+  ],
+  "packageRules": [
+    {
+      "description": "Pin docker image digests",
+      "matchCategories": ["docker"],
+      "pinDigests": true
+    },
+    {
+      "description": "Group all docker image updates",
+      "groupName": "container base images",
+      "matchDatasources": ["docker"]
+    },
+    {
+      "description": "Group all GitHub Actions workflow dependencies",
+      "groupName": "GitHub Actions dependencies",
+      "matchManagers": ["github-actions"]
+    }
   ]
 }
