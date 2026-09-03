@@ -71,7 +71,7 @@ jobs:
             org.opencontainers.image.version=0.0.1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
 
       - name: Log in to the Container registry
         uses: docker/login-action@da5b89b92c1be57a07eeed1334a0728b94145654
@@ -82,7 +82,7 @@ jobs:
 
       - name: Build and push Docker images
         id: build
-        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           push: true
           platforms: ${{ matrix.architecture }}
@@ -172,7 +172,7 @@ jobs:
             org.opencontainers.image.version=0.0.1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
 
       - name: Log in to Docker Hub
         uses: docker/login-action@da5b89b92c1be57a07eeed1334a0728b94145654
@@ -207,7 +207,7 @@ jobs:
 
       - name: Generate artifact attestation (ghcr)
         id: push-ghcr
-        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
         with:
           subject-name: ghcr.io/${{ env.GHCR_IMAGE_NAME }}
           subject-digest: ${{ steps.digest.outputs.digest }}
@@ -215,7 +215,7 @@ jobs:
 
       - name: Generate artifact attestation (dockerhub)
         id: push-dockerhub
-        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
         with:
           subject-name: index.docker.io/${{ vars.DOCKERHUB_IMAGE_NAME }}
           subject-digest: ${{ steps.digest.outputs.digest }}
@@ -249,7 +249,7 @@ jobs:
           tag_prefix: release-
 
       - name: Create release
-        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
         with:
           files: /tmp/artifacts/tg2*
           fail_on_unmatched_files: true
