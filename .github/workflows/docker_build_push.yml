@@ -14,7 +14,7 @@ env:
 
 jobs:
   docker_build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       packages: write
       contents: read
@@ -120,7 +120,7 @@ jobs:
           docker buildx imagetools inspect ${{ steps.meta.outputs.tags }}
 
   create_multi_platform_manifest_and_push:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       packages: write
       contents: read
